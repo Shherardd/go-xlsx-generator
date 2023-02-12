@@ -1,40 +1,61 @@
 package main
 
 import (
+	"excel-gen/models"
+	"excel-gen/reports"
 	"fmt"
-
-	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/xuri/excelize/v2"
+	"time"
 )
 
 func main() {
 	f := excelize.NewFile()
 
-	index := f.NewSheet("Empleados")
-
-	f.SetActiveSheet(index)
-
-	f.SetCellValue("Empleados", "A1", "ID")
-	f.SetCellValue("Empleados", "B1", "Nombre")
-	f.SetCellValue("Empleados", "C1", "Correo electrónico")
-
-	employees := []struct {
-		ID    int
-		Name  string
-		Email string
-	}{
-		{1, "John Doe", "johndoe@example.com"},
-		{2, "Jane Doe", "janedoe@example.com"},
-		{3, "Bob Smith", "bobsmith@example.com"},
+	//FAKE DATA
+	registros := []models.Registro{
+		{
+			Id:             255651,
+			CuentaBancaria: "234990038",
+			Banco:          "Citi-Mexico (Banamex)",
+			Referencia:     "000000000001",
+			Importe:        400304.5,
+		},
+		{
+			Id:             255647,
+			CuentaBancaria: "234786038",
+			Banco:          "Santander",
+			Referencia:     "000000000002",
+			Importe:        173593.87,
+		},
+		{
+			Id:             255645,
+			CuentaBancaria: "234945038",
+			Banco:          "AMEX",
+			Referencia:     "000000000003",
+			Importe:        164504.33,
+		},
 	}
 
-	for i, employee := range employees {
-		row := i + 2
-		f.SetCellValue("Empleados", fmt.Sprintf("A%d", row), employee.ID)
-		f.SetCellValue("Empleados", fmt.Sprintf("B%d", row), employee.Name)
-		f.SetCellValue("Empleados", fmt.Sprintf("C%d", row), employee.Email)
+	totales := models.Totales{
+		Importe: 307555061.5500001,
 	}
 
-	if err := f.SaveAs("employees.xlsx"); err != nil {
+	bancosNoIdentificados := models.BancosNoIdentificados{
+		Success:   true,
+		Registros: registros,
+		Totales:   totales,
+	}
+
+	metadata := &models.MetadataReport{
+		Company: "Nombre de la empresa",
+		Month:   "Enero",
+		Year:    "2021",
+		Time:    time.Now(),
+	}
+
+	reports.CrearExcelBancosNoIdentificadas(f, &bancosNoIdentificados, "BancosNoIdentificados", metadata)
+	reports.CrearExcelBancosNoIdentificadas(f, &bancosNoIdentificados, "BancosIdentificados", metadata)
+	if err := f.SaveAs("BancosNoIdentificados.xlsx"); err != nil {
 		fmt.Println(err)
 	}
 }
